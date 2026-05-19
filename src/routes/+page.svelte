@@ -1,5 +1,7 @@
 <script>
-  let transactions = $state([]);
+  let { data } = $props();
+
+  let transactions = $state(data.transactions || []);
 
   let date = $state('');
   let amount = $state('');
@@ -10,56 +12,19 @@
   let totalRevenue = $derived(
     transactions
       .filter((transaction) => transaction.type === 'Revenue')
-      .reduce((sum, transaction) => sum + transaction.amount, 0)
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0)
   );
 
   let totalExpenses = $derived(
     transactions
       .filter((transaction) => transaction.type === 'Expense')
-      .reduce((sum, transaction) => sum + transaction.amount, 0)
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0)
   );
 
   let netIncome = $derived(totalRevenue - totalExpenses);
 
-  function classifyTransaction(transaction) {
-    if (transaction.credit === 'Revenue') {
-      return 'Revenue';
-    }
-
-    if (transaction.debit === 'Rent Expense' || transaction.debit === 'Utilities Expense') {
-      return 'Expense';
-    }
-
-    return 'Other';
-  }
-
-  function addTransaction() {
-    const newTransaction = {
-      date: date,
-      amount: Number(amount),
-      description: description,
-      debit: debit,
-      credit: credit
-    };
-
-    newTransaction.type = classifyTransaction(newTransaction);
-
-    transactions = [newTransaction, ...transactions];
-
-    date = '';
-    amount = '';
-    description = '';
-    debit = '';
-    credit = '';
-  }
-
-  function handleSubmit(event) {
-    event.preventDefault();
-    addTransaction();
-  }
-
   function formatCurrency(value) {
-    return value.toLocaleString('en-US', {
+    return Number(value).toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD'
     });
@@ -75,11 +40,12 @@
   <section class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
     <h2 class="text-xl font-bold text-slate-800 mb-4">New Transaction</h2>
 
-    <form onsubmit={handleSubmit} class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label for="date" class="block text-sm font-medium text-slate-700 mb-1">Date</label>
         <input
           id="date"
+          name="date"
           bind:value={date}
           type="date"
           required
@@ -91,6 +57,7 @@
         <label for="amount" class="block text-sm font-medium text-slate-700 mb-1">Amount</label>
         <input
           id="amount"
+          name="amount"
           bind:value={amount}
           type="number"
           step="0.01"
@@ -106,6 +73,7 @@
         </label>
         <input
           id="description"
+          name="description"
           bind:value={description}
           type="text"
           placeholder="e.g. Service revenue"
@@ -120,6 +88,7 @@
         </label>
         <select
           id="debit"
+          name="debit"
           bind:value={debit}
           required
           class="border border-slate-300 rounded px-3 py-2 w-full"
@@ -140,6 +109,7 @@
         </label>
         <select
           id="credit"
+          name="credit"
           bind:value={credit}
           required
           class="border border-slate-300 rounded px-3 py-2 w-full"
